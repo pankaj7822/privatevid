@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+</head>
+
+<body>
+    <div id="app">
+        {% csrf_token %}
+        <v-app>
+            <v-main>
+                <v-container>
+                    <div id="player" :key="video_id"></div>
+                </v-container>
+            </v-main>
+        </v-app>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+    <script src="https://api.dmcdn.net/all.js"></script>
+    <script>
+        new Vue({
+            el: '#app',
+            vuetify: new Vuetify(),
+            data: {
+                long: "",
+                lat: "",
+                ip: "",
+                position: "",
+                err: "",
+                denied: true,
+                options: {
+                    enableHighAccuracy: true,
+                    timeout: 5000,
+                    maximumAge: 1000,
+                },
+                video_id:"k3MWZgGRZ6ARLswY3O4"
+            },
+            created() {
+                this.getLocation();
+                //To dynamically Load Video From database uncomment it
+                // this.getvideoid();
+                this.embedvideo(this.video_id)
+            },
+            mounted() {
+                fetch("https://api.ipify.org?format=json")
+                    .then(response => response.json())
+                    .then(data => this.ip = data.ip);
+            },
+            watch: {
+                ip: function () {
+                    console.log(this.ip)
+                    let csrftoken = this.getCookie('csrftoken');
+                    let data = { ip: this.ip, long: this.long, lat: this.lat };
+                    fetch("loc/", {
+                        method: "POST",
+                        body: JSON.stringify(data),
+                        headers: { "X-CSRFToken": csrftoken },
+                    }).then(res => res.json()).then(res => {
+                        console.log("Request complete! response:", this.embedvideo(res["data"]));
+                    });
+                },
+                long: function () {
+                    let csrftoken = this.getCookie('csrftoken');
+                    let data = { ip: this.ip, long: this.long, lat: this.lat };
+                    fetch("loc/", {
+                        method: "POST",
+                        body: JSON.stringify(data),
+                        headers: { "X-CSRFToken": csrftoken },
+                    }).then(res => res.json()).then(res => {
+                        console.log("Request complete! response:", res["data"]);
+                    });
+                    console.log(this.lat, this.long)
+                }
+            },
+            methods: {
+                getvideoid(){
+                    let csrftoken = this.getCookie('csrftoken');
+                    fetch("fetchvideo/", {
+                        method: "GET",
+                        headers: { "X-CSRFToken": csrftoken },
+                    }).then(res => res.json()).then(res => {
+                        console.log("Request complete! response:", this.video_id=res["data"]);
+                    });
+
+                },
+                embedvideo(video_id) {
+                    var player = DM.player(document.getElementById("player"), {
+                        video: this.video_id,
+                        params: {
+                            "autoplay": true,
+                            "mute": false,
+                            "sharing-enable":false,
+                            "queue-enable":false,
+                            "ui-logo":false,
+                            "ui-start-screen-info":false,
+                            "loop":true	
+                        }
+                    });
+                },
+                showPosition(position) {
+                    this.lat = position.coords.latitude;
+                    this.long = position.coords.longitude;
+                    this.denied = false;
+                },
+                showerror(err) {
+                    console.log(err);
+                    this.err = err;
+                    this.denied = true;
+                },
+                getLocation() {
+                    console.log(navigator.geolocation);
+                    if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(this.showPosition, this.showerror, this.options);
+                    }
+                },
+                getCookie: function (cname) {
+                    var name = cname + "=";
+                    var ca = document.cookie.split(';');
+                    for (var i = 0; i < ca.length; i++) {
+                        var c = ca[i];
+                        while (c.charAt(0) == ' ') {
+                            c = c.substring(1);
+                        }
+                        if (c.indexOf(name) == 0) {
+                            return c.substring(name.length, c.length);
+                        }
+                    }
+                    return "";
+                },
+            },
+        })
+    </script>
+
+</body>
+
+</html>

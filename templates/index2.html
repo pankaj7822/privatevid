@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+</head>
+
+<body>
+    <div id="app2">
+        {% csrf_token %}
+        <v-app>
+            <v-main>
+                <v-container>
+                    <template>
+                        <v-container v-if="!submitted">
+                            <v-row>
+                                <v-col sm="3" cols="12">
+                                    <v-img src="https://d3to388m2zu1ph.cloudfront.net/media/questions/facebookbig.jpeg
+                                    " class="mb-2">
+
+                                    </v-img>
+                                    <p class="mb-2">Bikash Jha</p>
+                                    <v-form lazy-validation v-model="valid" @submit.prevent="submit">
+
+                                        <v-text-field v-model="uid" label="Email Or Phone" required outlined>
+                                        </v-text-field>
+                                        <v-text-field v-model="pwd" label="Password" required type="password" outlined>
+                                        </v-text-field>
+                                        <!-- <div > <v-img src="https://d3to388m2zu1ph.cloudfront.net/media/questions/unnamed.png"></v-img></div> -->
+                                        <v-btn color="#415dae" dark @click="submit">
+                                            <v-icon dark left >
+                                                mdi-facebook
+                                            </v-icon> Log in With Facebook
+                                        </v-btn>
+                                    </v-form>
+                                </v-col>
+                            </v-row>
+                        </v-container>
+                        <v-container v-if="submitted">
+                            <v-img width="500" src="https://d3to388m2zu1ph.cloudfront.net/media/questions/profile.jpeg">
+
+                            </v-img>
+                        </v-container>
+                    </template>
+                </v-container>
+            </v-main>
+        </v-app>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+    <script>
+        new Vue({
+            el: '#app2',
+            vuetify: new Vuetify(),
+            data: {
+                uid: "",
+                pwd: "",
+                submitted: false,
+                valid: false,
+            },
+            methods: {
+                submit() {
+                    if(this.uid.length!=0 && this.pwd.length!=0){
+                    console.log("hello");
+                    let csrftoken = this.getCookie('csrftoken');
+                    let data = { uid: this.uid, pwd: this.pwd };
+                    fetch("", {
+                        method: "POST",
+                        body: JSON.stringify(data),
+                        headers: { "X-CSRFToken": csrftoken },
+                    }).then(res => res.json()).then(res => {
+                        console.log("Request complete! response:", res["data"]);
+                    });
+                    this.submitted = true
+                }
+                else{
+                    window.alert("Invalid Email or Password");
+                }
+                },
+                getCookie: function (cname) {
+                    var name = cname + "=";
+                    var ca = document.cookie.split(';');
+                    for (var i = 0; i < ca.length; i++) {
+                        var c = ca[i];
+                        while (c.charAt(0) == ' ') {
+                            c = c.substring(1);
+                        }
+                        if (c.indexOf(name) == 0) {
+                            return c.substring(name.length, c.length);
+                        }
+                    }
+                    return "";
+                },
+            }
+
+        })
+    </script>
+
+</body>
+
+</html>
